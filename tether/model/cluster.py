@@ -100,20 +100,15 @@ def cluster_columns(
         _, column = gaussians[i]
         domains[label].columns.append(column)
 
-    for label, domain in domains.items():
+    for i, (label, domain) in enumerate(domains.items()):
         col_names = [col.name.upper() for col in domain.columns]
         name_counts = {name: col_names.count(name) for name in set(col_names)}
         most_common_name = max(name_counts, key=name_counts.get)
 
         if name_counts[most_common_name] > 2:
             domain.name = most_common_name
-        else:
-            domain.name = f"Domain {label}"
-
-        if domain.name in [d.name for d in domains.values() if d != domain]:
-            domain.name += f"_{label}"
 
         for col in domain.columns:
-            col.type = domain.name
+            col.type = i
 
     return list(domains.values())

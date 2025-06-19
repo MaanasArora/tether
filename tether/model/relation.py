@@ -32,7 +32,7 @@ def ppmi(
     return ppmi
 
 
-def get_domain_relations(domains: list[Domain], dataset_ids: list[str]) -> pd.DataFrame:
+def get_domain_relations(domains: list[Domain], dataset_ids: list[str]) -> np.ndarray:
     dataset_domain_matrix = np.zeros((len(dataset_ids), len(domains)), dtype=int)
 
     for domain_index, domain in enumerate(tqdm(domains, desc="Processing domains")):
@@ -41,14 +41,7 @@ def get_domain_relations(domains: list[Domain], dataset_ids: list[str]) -> pd.Da
             dataset_domain_matrix[dataset_index, domain_index] += 1
 
     correlations = ppmi(dataset_domain_matrix, smoothing=1e-8)
-
-    pd_matrix = pd.DataFrame(
-        correlations,
-        index=[domain.name for domain in domains],
-        columns=[domain.name for domain in domains],
-    )
-
-    return pd_matrix
+    return correlations
 
 
 def get_column_id(column: Column) -> str:
@@ -56,7 +49,7 @@ def get_column_id(column: Column) -> str:
 
 
 def get_column_relations(
-    domain_relations: pd.DataFrame,
+    domain_relations: np.ndarray,
     columns: list[Column],
     max_relations: int = 10,
 ) -> pd.DataFrame:

@@ -12,7 +12,6 @@ def make_metadata_for_db(
 ):
     package_to_id = {pkg.name: i for i, pkg in enumerate(packages, 1)}
     dataset_to_id = {ds.id: i for i, ds in enumerate(datasets, 1)}
-    domain_to_id = {domain.name: i for i, domain in enumerate(domains, 1)}
     column_to_id = {
         f"{col.dataset.id}.{col.name}": i for i, col in enumerate(columns, 1)
     }
@@ -35,10 +34,10 @@ def make_metadata_for_db(
     domains_db = pd.DataFrame(
         [
             {
-                "id": domain_to_id[domain.name],
+                "id": i,
                 "name": domain.name,
             }
-            for domain in domains
+            for i, domain in enumerate(domains, 1)
         ],
         columns=["id", "name"],
     )
@@ -48,7 +47,7 @@ def make_metadata_for_db(
                 "id": column_to_id[f"{col.dataset.id}.{col.name}"],
                 "name": col.name,
                 "dataset_id": dataset_to_id[col.dataset.id],
-                "domain_id": domain_to_id.get(col.type, None),
+                "domain_id": col.type,
             }
             for col in columns
         ],
@@ -91,12 +90,12 @@ def save_metadata_to_db(
 ):
     engine = create_engine(db_url)
     with engine.connect() as conn:
-        conn.execute(text("DELETE FROM examples"))
-        conn.execute(text("DELETE FROM columns"))
-        conn.execute(text("DELETE FROM domains"))
-        conn.execute(text("DELETE FROM datasets"))
-        conn.execute(text("DELETE FROM packages"))
-        conn.commit()
+        if conn.dialect.has_table(conn, "packages"):
+            conn.execute(text("DROP TABLE IF EXISTS examples"))
+            conn.execute(text("DROP TABLE IF EXISTS columns"))
+            conn.execute(text("DROP TABLE IF EXISTS domains"))
+            conn.execute(text("DROP TABLE IF EXISTS datasets"))
+            conn.execute(text("DROP TABLE IF EXISTS packages"))
 
         packages_db.to_sql("packages", conn, if_exists="append", index=False)
         datasets_db.to_sql("datasets", conn, if_exists="append", index=False)
