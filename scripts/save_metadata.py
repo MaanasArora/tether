@@ -90,8 +90,8 @@ def main():
     )
 
     metadata_db = make_metadata_for_db(
-        packages=data_repository.packages,
-        datasets=datasets,
+        packages=list(data_repository.list_packages()),
+        datasets=list(data_repository.list_datasets()),
         domains=domains,
         columns=columns,
     )
