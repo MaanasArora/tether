@@ -1,11 +1,14 @@
 import argparse
 from pathlib import Path
+
+import pandas as pd
 from tether.dataset.source import DataSource, Column
 from tether.dataset.repository import DataRepository
 from tether.model.item import ItemAutoencoder, load_model
 from tether.model.cluster import cluster_columns
 from tqdm import tqdm
 
+from tether.model.relation import get_domain_relations
 from tether.utils.database import make_metadata_for_db, save_metadata_to_db
 
 
@@ -98,6 +101,23 @@ def main():
 
     save_metadata_to_db(*metadata_db)
     print("Metadata saved to database.")
+
+    domain_relations = get_domain_relations(
+        domains=domains,
+        dataset_ids=[dataset.id for dataset in datasets],
+    )
+    domain_relations_df = pd.DataFrame(domain_relations)
+
+    index = metadata_db[2].id
+    domain_relations_df.index = index
+    domain_relations_df.columns = index
+    
+    domain_relations_df.fillna(0, inplace=True)
+    domain_relations_df = domain_relations_df.astype(float)
+    domain_relations_df = domain_relations_df.round(2)
+
+    domain_relations_df.to_csv("data/output/domain_relations.csv")
+    print("Domain relations saved to data/output/domain_relations.csv.")
 
 
 if __name__ == "__main__":
