@@ -47,7 +47,7 @@ def make_metadata_for_db(
                 "id": column_to_id[f"{col.dataset.id}.{col.name}"],
                 "name": col.name,
                 "dataset_id": dataset_to_id[col.dataset.id],
-                "domain_id": col.type,
+                "domain_id": col.type + 1 if col.type is not None else None,
             }
             for col in columns
         ],
@@ -56,13 +56,16 @@ def make_metadata_for_db(
     examples_db = pd.DataFrame(
         [
             {
+                "id": i * 100 + j,  # Unique ID for each example
                 "column_id": column_to_id[f"{col.dataset.id}.{col.name}"],
                 "value": example,
             }
-            for col in columns
-            for example in col.dataset.load(nrows=100)[col.name].dropna().unique()
+            for i, col in enumerate(columns)
+            for j, example in enumerate(
+                col.dataset.load(nrows=100)[col.name].dropna().unique()
+            )
         ],
-        columns=["column_id", "value"],
+        columns=["id", "column_id", "value"],
     )
     examples_db["value"] = (
         examples_db["value"].astype(str).str[:50]
